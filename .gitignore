@@ -1,0 +1,52 @@
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+
+# Temporary backup files and folders
+_BAK_*
+
+# Logs
+*.log
+log/*
+
+# Secrets
+*.env
+.env*
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# JMeter HTML dashboards (large)
+jmeter/reports/**
+!jmeter/reports/.keep
+jmeter/results/**
+!jmeter/results/.keep
+
+# Newman HTML reports (optional keep)
+postman/**/reports/**
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Pytest cache
+.pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Bytecode
+*.pyc

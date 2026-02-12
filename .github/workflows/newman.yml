@@ -1,0 +1,89 @@
+name: postman-newman
+
+# Trigger only if files in the `postman` folder change
+on:
+  push:
+    paths:
+      - "postman/**"
+      - ".github/workflows/newman.yml" # trigger if this workflow changes
+  pull_request:
+    paths:
+      - "postman/**"
+
+# Ensure only one run of this workflow per branch at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ----------------------------
+
+jobs:
+  run-newman: # job name
+    runs-on: ubuntu-latest # use the latest Ubuntu runner
+
+    # ----------------------------
+    # Set env vars for the job
+    # ----------------------------
+    env:
+      API_KEY: ${{ secrets.REQRES_API_KEY }}
+
+    # ----------------------------
+    # Set defaults for the job
+    # ----------------------------
+    defaults:
+      run:
+        working-directory: postman # set default working directory to simplify paths
+
+    # ----------------------------
+
+    steps:
+      # ----------------------------
+      # Setup Steps
+      # ----------------------------
+      - name: Checkout Code
+        uses: actions/checkout@v4 # check out the repository - clones the code
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Newman
+        run: npm install newman newman-reporter-htmlextra # install locally for speed and stability
+
+      - name: Setup Directories
+        run: |
+          mkdir -p rest-countries/reports reqres-crud/reports
+
+      # ----------------------------
+      # REST Countries Tests
+      # ----------------------------
+      - name: Run REST Countries suite
+        run: |
+          npx newman run rest-countries/REST-Countries-QA-Demo-Testing-Suite.postman_collection.json \
+            -e rest-countries/REST-Countries-QA-Demo-Env.postman_environment.json \
+            -r htmlextra \
+            --reporter-htmlextra-export rest-countries/reports/index.html
+
+      # ----------------------------
+      # ReqRes CRUD Tests
+      # ----------------------------
+      - name: Run ReqRes CRUD suite
+        # Only run on pushes AND when the secret is available
+        if: github.event_name == 'push' && env.API_KEY != ''
+        run: |
+          npx newman run reqres-crud/ReqRes-CRUD-QA-Demo-Suite.postman_collection.json \
+            -e reqres-crud/ReqRes-CRUD-QA-Demo-Env.postman_environment.json \
+            --env-var "API_KEY=${{ env.API_KEY }}" \
+            -r htmlextra \
+            --reporter-htmlextra-export reqres-crud/reports/index.html
+
+      # ----------------------------
+      # Upload reports
+      # ----------------------------
+      - name: Upload Newman reports
+        uses: actions/upload-artifact@v4 # upload the generated reports as artifacts
+        if: always() # ensure reports are uploaded even if a test step fails
+        with:
+          name: newman-reports # name of the artifact
+          path: postman/**/reports/index.html # path is relative to the workspace root, NOT the working-directory default

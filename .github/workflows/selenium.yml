@@ -1,0 +1,80 @@
+name: selenium-ui
+
+# Trigger only if files in the `selenium` folder change
+on:
+  push:
+    paths:
+      - "selenium/**"
+      - ".github/workflows/selenium.yml" # trigger if this workflow changes
+  pull_request:
+    paths:
+      - "selenium/**"
+
+# Ensure only one run of this workflow per branch at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ----------------------------
+
+jobs:
+  ui-tests: # job name
+    runs-on: ubuntu-latest # use the latest Ubuntu runner
+
+    # ----------------------------
+    # Set env vars for the job
+    # ----------------------------
+    env:
+      HEADLESS: "true"
+      BASE_URL: "https://the-internet.herokuapp.com"
+
+    # ----------------------------
+    # Set defaults for the job
+    # ----------------------------
+    defaults:
+      run:
+        working-directory: selenium
+
+    # ----------------------------
+
+    steps:
+      # ----------------------------
+      # Setup Steps
+      # ----------------------------
+      - name: Checkout Code
+        uses: actions/checkout@v4 # check out the repository - clones the code
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+          cache-dependency-path: selenium/requirements.txt # path relative to repo root
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Setup Directories
+        run: |
+          mkdir -p artifacts/reports
+
+      # ----------------------------
+      # UI Tests
+      # ----------------------------
+      - name: Run pytest
+        # Use --junitxml for a standard test report
+        run: |
+          pytest tests/ -ra -v  --junitxml=artifacts/reports/results.xml
+
+      # ----------------------------
+      # Upload artifacts (Screenshots + Reports)
+      # ----------------------------
+      - name: Upload Test Artifacts
+        uses: actions/upload-artifact@v4 # upload the generated reports as artifacts
+        if: always() # ensure reports are uploaded even if a test step fails
+        with:
+          name: selenium-test-data # name of the artifact
+          path: selenium/artifacts/ # path is relative to repo, NOT the working-directory default
+          if-no-files-found: ignore

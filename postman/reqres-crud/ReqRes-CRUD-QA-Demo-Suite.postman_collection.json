@@ -1,0 +1,298 @@
+{
+  "info": {
+    "_postman_id": "a69b7d32-bb98-4f4c-9716-4bbb7d516baa",
+    "name": "ReqRes – CRUD QA Demo Suite",
+    "description": "Create, read, update, delete flows against [https://reqres.in](https://reqres.in) with assertions and variable chaining.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49830908"
+  },
+  "item": [
+    {
+      "name": "Create User (POST)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generate random user data (name/job)",
+              "const first = [\"Ada\", \"Alan\", \"Grace\", \"Linus\", \"Margaret\", \"Edsger\"][Math.floor(Math.random() * 6)];",
+              "const last = [\"Lovelace\", \"Turing\", \"Hopper\", \"Torvalds\", \"Hamilton\", \"Dijkstra\"][Math.floor(Math.random() * 6)];",
+              "pm.environment.set(\"name\", first + \" \" + last); // Set the name environment variable",
+              "const roles = [\"QA Engineer\", \"SDET\", \"Automation Lead\", \"Test Analyst\", \"Quality Manager\"];",
+              "pm.environment.set(\"job\", roles[Math.floor(Math.random() * roles.length)]); // Set the job environment variable"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Basic response assertions",
+              "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+              "pm.test(\"Response time < 1200ms\", () => pm.expect(pm.response.responseTime).to.be.below(1200));",
+              "pm.test(\"Content-Type is JSON\", () => {",
+              "    pm.response.to.have.header(\"Content-Type\");",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "// Check if the response body contains the expected data",
+              "const postData = pm.response.json(); // Parse the response body as JSON",
+              "pm.test(\"Has id & createdAt\", () => {",
+              "    pm.expect(postData).to.have.property(\"id\");",
+              "    pm.expect(postData).to.have.property(\"createdAt\");",
+              "});",
+              "",
+              "// Capture values for reuse",
+              "pm.environment.set(\"created_id\", postData.id);",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"{{name}}\", \"job\":\"{{job}}\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/users",
+          "host": ["{{base_url}}"],
+          "path": ["api", "users"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update User (PUT)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Basic response assertions",
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Response time < 1200ms\", () => pm.expect(pm.response.responseTime).to.be.below(1200));",
+              "pm.test(\"Content-Type is JSON\", () => {",
+              "    pm.response.to.have.header(\"Content-Type\");",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "// Check if the response body contains the expected data",
+              "pm.test(\"updatedAt present\", () => pm.expect(pm.response.json()).to.have.property(\"updatedAt\"));"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [""],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"{{name}}\", \"job\":\"Senior {{job}}\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/users/{{user_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "users", "{{user_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Partial Update (PATCH)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Basic response assertions",
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Response time < 1200ms\", () => pm.expect(pm.response.responseTime).to.be.below(1200));",
+              "pm.test(\"Content-Type is JSON\", () => {",
+              "    pm.response.to.have.header(\"Content-Type\");",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "// Check if the response body contains the expected data",
+              "pm.test(\"updatedAt present\", () => pm.expect(pm.response.json()).to.have.property(\"updatedAt\"));"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [""],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"job\":\"Lead {{job}}\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/users/{{user_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "users", "{{user_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get User (GET)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Basic response assertions",
+              "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Response time < 1200ms\", () => pm.expect(pm.response.responseTime).to.be.below(1200));",
+              "pm.test(\"Content-Type is JSON\", () => {",
+              "    pm.response.to.have.header(\"Content-Type\");",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "// Check if the response body contains the expected data",
+              "const getData = pm.response.json();",
+              "pm.test(\"User object exists\", () => {",
+              "    pm.expect(getData).to.have.property(\"data\");",
+              "    pm.expect(getData.data).to.have.property(\"id\");",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/users/{{user_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "users", "{{user_id}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete User (DELETE)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Basic response assertions",
+              "pm.test(\"Status 204 No Content\", () => pm.response.to.have.status(204));"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/users/{{user_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "users", "{{user_id}}"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "value",
+        "value": "{{API_KEY}}",
+        "type": "string"
+      },
+      {
+        "key": "key",
+        "value": "x-api-key",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [""]
+      }
+    }
+  ]
+}

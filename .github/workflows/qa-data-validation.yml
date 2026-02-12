@@ -1,0 +1,72 @@
+name: qa-data-validation
+
+# Trigger only if files in the `qa-data-validation` folder change
+on:
+  push:
+    paths:
+      - "qa-data-validation/**"
+      - ".github/workflows/qa-data-validation.yml" # trigger if this workflow changes
+  pull_request:
+    paths:
+      - "qa-data-validation/**"
+
+# Ensure only one run of this workflow per branch at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ----------------------------
+
+jobs:
+  run-data-validation: # job name
+    runs-on: ubuntu-latest # use the latest Ubuntu runner
+
+    # ----------------------------
+    # Set defaults for the job
+    # ----------------------------
+    defaults:
+      run:
+        working-directory: qa-data-validation
+
+    # ----------------------------
+
+    steps:
+      # ----------------------------
+      # Setup Steps
+      # ----------------------------
+      - name: Checkout Code
+        uses: actions/checkout@v4 # check out the repository - clones the code
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: qa-data-validation/requirements.txt # path relative to repo root
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Setup Directories
+        run: |
+          mkdir -p reports
+
+      # ----------------------------
+      # Unit Tests
+      # ----------------------------
+      - name: Run data validation tests
+        # Use --junitxml for a standard test report
+        run: |
+          pytest tests/ -ra -v --junitxml=reports/validation-results.xml
+
+      # ----------------------------
+      # Upload reports
+      # ----------------------------
+      - name: Upload Validation Reports
+        uses: actions/upload-artifact@v4 # upload the generated reports as artifacts
+        if: always() # ensure reports are uploaded even if a test step fails
+        with:
+          name: data-validation-results # name of the artifact
+          path: qa-data-validation/reports/ # path is relative to repo, NOT the working-directory default

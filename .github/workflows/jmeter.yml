@@ -1,0 +1,75 @@
+name: jmeter-load
+
+# Trigger only if files in the `jmeter` folder change
+on:
+  push:
+    paths:
+      - "jmeter/**"
+      - ".github/workflows/jmeter.yml" # trigger if this workflow changes
+
+# Ensure only one run of this workflow per branch at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ----------------------------
+
+jobs:
+  run-jmeter: # job name
+    runs-on: ubuntu-latest # use the latest Ubuntu runner
+
+    # ----------------------------
+    # Set env vars for the job
+    # ----------------------------
+    env:
+      API_KEY: ${{ secrets.REQRES_API_KEY }}
+
+    # ----------------------------
+
+    steps:
+      # ----------------------------
+      # Setup Steps
+      # ----------------------------
+      - name: Checkout Code
+        uses: actions/checkout@v4 # check out the repository - clones the code
+
+      - name: Setup Directories # ensure Docker can write to them
+        run: |
+          mkdir -p jmeter/results jmeter/reports/normal jmeter/reports/stress
+          chmod -R 777 jmeter/results jmeter/reports
+
+      # ----------------------------
+      # Normal Tests
+      # ----------------------------
+      - name: Run NORMAL load via Dockerized JMeter
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/test -w /test \
+            justb4/jmeter:5.5 \
+            -n -t jmeter/plans/ReqRes_LoadTests_NORMAL.jmx \
+            -JAPI_KEY=${{ env.API_KEY }} \
+            -JLOOPS=1 \
+            -l jmeter/results/results_normal.jtl \
+            -e -o jmeter/reports/normal
+
+      # ----------------------------
+      # Stress Tests
+      # ----------------------------
+      - name: Run STRESS load via Dockerized JMeter
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/test -w /test \
+            justb4/jmeter:5.5 \
+            -n -t jmeter/plans/ReqRes_LoadTests_STRESS.jmx \
+            -JAPI_KEY=${{ env.API_KEY }} \
+            -JLOOPS=1 \
+            -l jmeter/results/results_stress.jtl \
+            -e -o jmeter/reports/stress
+
+      # ----------------------------
+      # Upload reports
+      # ----------------------------
+      - name: Upload JMeter dashboards
+        uses: actions/upload-artifact@v4 # upload the generated reports as artifacts
+        if: always() # ensure reports are uploaded even if a test step fails
+        with:
+          name: jmeter-reports # name of the artifact
+          path: jmeter/reports # path is relative to the workspace root, NOT the working-directory default

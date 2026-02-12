@@ -1,0 +1,395 @@
+{
+  "info": {
+    "_postman_id": "4750a35c-32da-40be-8973-770e6b458418",
+    "name": "REST Countries – QA Demo Testing Suite",
+    "description": "A concise QA collection that validates core REST Countries endpoints with positive, negative, and edge-case checks.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49830908"
+  },
+  "item": [
+    {
+      "name": "GET All Countries",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Basic response assertions",
+              "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Response time under 1200ms\", () => pm.expect(pm.response.responseTime).to.be.below(1200));",
+              "pm.test(\"Content-Type is JSON\", () => {",
+              "    pm.response.to.have.header(\"Content-Type\");",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "// Check if the response body contains the expected data",
+              "const allCountriesData = pm.response.json();",
+              "pm.test(\"Returns an array with at least 200 countries\", () => {",
+              "    pm.expect(allCountriesData).to.be.an(\"array\");",
+              "    pm.expect(allCountriesData.length).to.be.above(200);",
+              "});",
+              "pm.test(\"Country objects have expected keys\", () => {",
+              "    const c = allCountriesData[0];",
+              "    pm.expect(c).to.have.property(\"name\");",
+              "    pm.expect(c.name).to.have.property(\"common\");",
+              "    pm.expect(c).to.have.property(\"cca2\");",
+              "    pm.expect(c).to.have.property(\"region\");",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [""],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/all?fields=name,cca2,region",
+          "host": ["{{base_url}}"],
+          "path": ["all"],
+          "query": [
+            {
+              "key": "fields",
+              "value": "name,cca2,region"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET By Name (fullText)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Basic response assertions",
+              "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Response time under 1200ms\", () => pm.expect(pm.response.responseTime).to.be.below(1200));",
+              "pm.test(\"Content-Type is JSON\", () => {",
+              "    pm.response.to.have.header(\"Content-Type\");",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "// Check if the response body contains the expected data",
+              "const nameData = pm.response.json();",
+              "pm.test(\"Exactly one match for fullText=true\", () => {",
+              "    pm.expect(nameData).to.be.an(\"array\");",
+              "    pm.expect(nameData.length).to.equal(1);",
+              "});",
+              "pm.test(\"Country name is provided (CSV or env)\", () => {",
+              "  const cn = pm.environment.get(\"country_name\");",
+              "  pm.expect(cn, \"country_name env var is empty\").to.be.a(\"string\").and.not.be.empty;",
+              "});",
+              "pm.test(\"Country name matches environment country_name\", () => {",
+              "    pm.expect(nameData[0].name.common).to.equal(pm.environment.get(\"country_name\"));",
+              "});",
+              "",
+              "// Capture values for reuse",
+              "pm.environment.set(\"captured_cca2\", nameData[0].cca2);",
+              "pm.environment.set(\"captured_capital\", (nameData[0].capital && nameData[0].capital[0]) || \"\");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Set country_name env var, from the CSV for each iteration (if present)",
+              "const countryFromData = pm.iterationData.get(\"country_name\");",
+              "if (countryFromData) { pm.environment.set(\"country_name\", countryFromData); }",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/name/{{country_name}}?fullText=true",
+          "host": ["{{base_url}}"],
+          "path": ["name", "{{country_name}}"],
+          "query": [
+            {
+              "key": "fullText",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET By Alpha Code",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Basic response assertions",
+              "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Response time under 1200ms\", () => pm.expect(pm.response.responseTime).to.be.below(1200));",
+              "pm.test(\"Content-Type is JSON\", () => {",
+              "    pm.response.to.have.header(\"Content-Type\");",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "// Check if the response body contains the expected data",
+              "const alphaData = pm.response.json();",
+              "pm.test(\"Alpha lookup returns exactly one country\", () => {",
+              "    pm.expect(alphaData).to.be.an(\"array\");",
+              "    pm.expect(alphaData.length).to.equal(1);",
+              "});",
+              "pm.test(\"Alpha code is provided (CSV or env)\", () => {",
+              "  const ac = pm.environment.get(\"alpha_code\");",
+              "  pm.expect(ac, \"alpha_code env var is empty\").to.be.a(\"string\").and.not.be.empty;",
+              "});",
+              "pm.test(\"cca2 matches env alpha_code\", () => {",
+              "    pm.expect(alphaData[0]).to.have.property(\"cca2\", pm.environment.get(\"alpha_code\"));",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Set alpha_code env var, from the CSV for each iteration (if present)",
+              "const alphaFromData = pm.iterationData.get(\"alpha_code\");",
+              "if (alphaFromData) { pm.environment.set(\"alpha_code\", alphaFromData); }"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/alpha/{{alpha_code}}",
+          "host": ["{{base_url}}"],
+          "path": ["alpha", "{{alpha_code}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET By Currency",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Basic response assertions",
+              "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Response time under 1200ms\", () => pm.expect(pm.response.responseTime).to.be.below(1200));",
+              "pm.test(\"Content-Type is JSON\", () => {",
+              "    pm.response.to.have.header(\"Content-Type\");",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "// Check if the response body contains the expected data",
+              "const currencyData = pm.response.json();",
+              "pm.test(\"Currency lookup returns an array with at least one country\", () => {",
+              "    pm.expect(currencyData).to.be.an(\"array\");",
+              "    pm.expect(currencyData.length).to.be.above(0);",
+              "});",
+              "pm.test(\"Currency is provided (CSV or env)\", () => {",
+              "  const cur = pm.environment.get(\"currency\");",
+              "  pm.expect(cur, \"currency env var is empty\").to.be.a(\"string\").and.not.be.empty;",
+              "});",
+              "pm.test(\"At least one country includes the currency code\", () => {",
+              "    const cur = (pm.environment.get(\"currency\")).toUpperCase();",
+              "    const anyHas = currencyData.some(c => c.currencies && c.currencies[cur]);",
+              "    pm.expect(anyHas).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Set currency env var from the CSV for each iteration (if present)",
+              "const currencyFromData = pm.iterationData.get(\"currency\");",
+              "if (currencyFromData) { pm.environment.set(\"currency\", currencyFromData); }"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/currency/{{currency}}",
+          "host": ["{{base_url}}"],
+          "path": ["currency", "{{currency}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "NEGATIVE: Nonexistent Country (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Basic response assertions",
+              "pm.test(\"Status code is 404 for nonexistent country\", () => {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "",
+              "// Check if the response body contains the expected data",
+              "pm.test(\"Non existent country is provided (CSV or env)\", () => {",
+              "  const necn = pm.environment.get(\"nonexistent_country\");",
+              "  pm.expect(necn, \"nonexistent_country env var is empty\").to.be.a(\"string\").and.not.be.empty;",
+              "});",
+              "pm.test(\"Error response has a message or status\", () => {",
+              "    let data;",
+              "    try { data = pm.response.json(); } catch (e) { data = {}; }",
+              "    pm.expect(data).to.be.an(\"object\");",
+              "    pm.expect(Object.keys(data)).to.include.any.members([\"message\", \"status\"]);",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Set nonexistent_country env var from the CSV for each iteration (if present)",
+              "const imgnCountryFromData = pm.iterationData.get(\"nonexistent_country\");",
+              "if (imgnCountryFromData) { pm.environment.set(\"nonexistent_country\", imgnCountryFromData); }"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/name/{{nonexistent_country}}?fullText=true",
+          "host": ["{{base_url}}"],
+          "path": ["name", "{{nonexistent_country}}"],
+          "query": [
+            {
+              "key": "fullText",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "EDGE: Case-Insensitive Name",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Set country_name env var, from the CSV for each iteration (if present)",
+              "const countryFromData = pm.iterationData.get(\"country_name\");",
+              "if (countryFromData) { pm.environment.set(\"country_name\", countryFromData); }",
+              "",
+              "// Randomize case to assert case-insensitive handling",
+              "const cn_original = pm.environment.get('country_name');",
+              "const funky = cn_original",
+              "    .split(\"\")",
+              "    .map((ch, i) => (i % 2 ? ch.toUpperCase() : ch.toLowerCase()))",
+              "    .join(\"\");",
+              "",
+              "// Set it to a local variable so it affects only this request",
+              "pm.variables.set('country_name_funky', funky);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Basic response assertions",
+              "pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Response time under 1200ms\", () => pm.expect(pm.response.responseTime).to.be.below(1200));",
+              "pm.test(\"Content-Type is JSON\", () => {",
+              "    pm.response.to.have.header(\"Content-Type\");",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+              "});",
+              "",
+              "// Check if the response body contains the expected data",
+              "const caseInsensitiveData = pm.response.json();",
+              "pm.test(\"Country name is provided (CSV or env)\", () => {",
+              "  const cn = pm.environment.get(\"country_name\");",
+              "  pm.expect(cn, \"country_name env var is empty\").to.be.a(\"string\").and.not.be.empty;",
+              "});",
+              "",
+              "const expected = pm.environment.get(\"country_name\");",
+              "pm.test(\"Name lookup remains correct despite input casing\", () => {",
+              "    pm.expect(caseInsensitiveData[0].name.common).to.equal(expected);",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/name/{{country_name_funky}}?fullText=true",
+          "host": ["{{base_url}}"],
+          "path": ["name", "{{country_name_funky}}"],
+          "query": [
+            {
+              "key": "fullText",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
