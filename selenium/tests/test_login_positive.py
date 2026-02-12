@@ -61,7 +61,7 @@ def test_logout_redirects_to_login(driver, base_url, valid_credentials):
     #   Verify the secure area page is loaded
     assert secure_page.is_loaded(), "Secure area page did not load after login."
 
-    secure_page.click_logout()  # perform logout action
+    secure_page.logout(timeout=15)  # perform logout action
 
     #
     # Redirects back to login page
@@ -71,7 +71,12 @@ def test_logout_redirects_to_login(driver, base_url, valid_credentials):
     # Assertion:
     #   Verify the login page is loaded
     #   - use a longer timeout to account for redirect delay
-    assert login_page.is_loaded(timeout=15), "Login page did not load after logout."
+    # assert login_page.is_loaded(timeout=15), "Login page did not load after logout."
+
+    # Assertion:
+    #   Verify the login page is loaded - after redirect
+    #   - not using `is_loaded` cause in `logout` we wait for the login page to be interactable after redirect
+    assert login_page.is_at(), "Did not land on login page after logout."
 
     flash_text = login_page.get_flash_text()  # get flash message text
 

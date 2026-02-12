@@ -1,5 +1,18 @@
-# OS/editor
-.DS_Store
+# System & OS files
+.DS_*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+System Volume Information
+$Recycle.Bin
+RECYCLER
+RECYCLED
+desktop.ini
+thumbs.db
+
+# IDE / Editor
 .idea/
 .vscode/
 

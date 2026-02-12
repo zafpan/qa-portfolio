@@ -1,9 +1,12 @@
 from __future__ import annotations  # treat type hints as strings instead of active objects (Python 3.7+)
 
 from selenium.webdriver.common.by import By  # locator strategies e.g. By.ID, By.CSS_SELECTOR
+from selenium.webdriver.support.ui import WebDriverWait  # explicit wait class
 from selenium.webdriver.support.expected_conditions import (
     presence_of_element_located,
     element_to_be_clickable,
+    staleness_of,
+    visibility_of_element_located,
 )  # expected conditions for waits
 
 from typing import TYPE_CHECKING  # for type hinting
@@ -31,8 +34,8 @@ class SecureAreaPage(BasePage):
     PATH = "/secure"
 
     # Locators as class attributes (tuple: (By, locator_string))
-    LOGOUT_BUTTON = (By.CSS_SELECTOR, "a[href='/logout']")  # for Logout button
-
+    LOGOUT_BUTTON = (By.CSS_SELECTOR, "a[href='/logout']")
+    LOGIN_USERNAME_INPUT = (By.ID, "username")
 
     def wait_until_loaded(self, wait: WebDriverWait | None = None) -> None:
         """
@@ -53,9 +56,23 @@ class SecureAreaPage(BasePage):
 
 
 
-    def click_logout(self) -> None:
-        """Helper to click the Logout button."""
+    def logout(self, timeout: int | None = None) -> None:
+        """
+        Helper to click the Logout button and wait until the logout action is complete,
+        by waiting for the login page to be loaded and interactable again.
+
+        Parameters
+        ----------
+        timeout : int | None, optional
+            An optional timeout in seconds for waiting.
+        """
+
+        wait = WebDriverWait(self.driver, timeout) if timeout else self.wait  # use provided wait or default
 
         # Locate Logout button and wait until clickable
-        logout_button = self.wait.until(element_to_be_clickable(self.LOGOUT_BUTTON))  # for Logout button
+        logout_button = self.wait.until(element_to_be_clickable(self.LOGOUT_BUTTON))
         logout_button.click()  # click the button
+
+        # Wait until the logout action is complete and the page is redirected back to the login page
+        wait.until(staleness_of(logout_button))  # ensure the secure page is gone
+        wait.until(visibility_of_element_located(self.LOGIN_USERNAME_INPUT))  # ensure login page is interactable/visible

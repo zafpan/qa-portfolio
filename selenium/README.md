@@ -180,3 +180,4 @@ Each screenshot includes:
 - **Explicit waits** (`WebDriverWait`) are used where dynamic content is expected for stability and reliability.
 - **Screenshot capture on failure** is enabled for fast debugging and traceability.
 - Tests are **isolated, order-independent**.
+- Tests run against a public demo application, where occasional CI timing variability may occur due to external network or service conditions.
