@@ -33,11 +33,13 @@ venv/
 env/
 ENV/
 
-# JMeter HTML dashboards (large)
-jmeter/reports/**
+# Reports and Results
+**/reports/**
+**/results/**
 !jmeter/reports/.keep
-jmeter/results/**
 !jmeter/results/.keep
+!selenium/artifacts/reports/.keep
+!selenium/artifacts/screenshots/.keep
 
 # Newman HTML reports (optional keep)
 postman/**/reports/**

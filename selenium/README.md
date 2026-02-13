@@ -160,6 +160,14 @@ pytest tests/test_ui_links.py
 pytest tests/test_ui_links.py::test_footer_elemental_selenium_link_visible
 ```
 
+### HTML test report (optional)
+
+To generate a standalone HTML report:
+
+```bash
+pytest tests/ --html=artifacts/reports/report.html --self-contained-html
+```
+
 ### Screenshots on failure
 
 Screenshots are automatically captured on test failure and saved to `artifacts/screenshots/`.

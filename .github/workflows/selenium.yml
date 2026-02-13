@@ -64,9 +64,11 @@ jobs:
       # UI Tests
       # ----------------------------
       - name: Run pytest
-        # Use --junitxml for a standard test report
+        # Generate both JUnit XML (CI-friendly) and HTML (human-friendly) reports
         run: |
-          pytest tests/ -ra -v  --junitxml=artifacts/reports/results.xml
+          pytest tests/ -ra -v \
+            --junitxml=artifacts/reports/results.xml \
+            --html=artifacts/reports/report.html --self-contained-html
 
       # ----------------------------
       # Upload artifacts (Screenshots + Reports)
