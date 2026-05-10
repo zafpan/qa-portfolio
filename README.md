@@ -1,15 +1,15 @@
-# QA Portfolio
+# Automation & Testing Sandbox
 
-A curated QA portfolio showcasing hands-on work across **UI automation, API testing, data validation,** and **performance testing**. Each project is production-style, documented, and runnable with minimal setup.
+A collection of technical exercises and experimentation projects exploring UI automation, API testing, data validation, performance testing, and CI workflows.
 
-This repo is intended for hiring managers and QA teams who want to review practical examples of test design, tooling, and automation practices.
+The repository serves as a hands-on environment for applying structured testing approaches, automation tooling, validation techniques, and software quality practices across different types of systems and workflows.
 
-Each project is **self-contained** and **documented** in its respective folder.
+Projects are self-contained, documented, and designed for continuous experimentation and learning.
 
-### Portfolio Architecture
+### Sandbox Architecture
 
 ```
-QA Portfolio
+Automation & Testing Sandbox
 │
 ├── UI Automation
 │   └── Selenium Tests (POM)
